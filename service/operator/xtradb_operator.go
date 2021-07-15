@@ -28,12 +28,13 @@ import (
 )
 
 type XtraDBOperatorService struct {
-	p *message.Printer
+	p                   *message.Printer
+	manifestsURLTemplate string
 }
 
 // NewXtraDBOperatorService returns new XtraDBOperatorService instance.
-func NewXtraDBOperatorService(p *message.Printer) *XtraDBOperatorService {
-	return &XtraDBOperatorService{p: p}
+func NewXtraDBOperatorService(p *message.Printer, url string) *XtraDBOperatorService {
+	return &XtraDBOperatorService{p: p, manifestsURLTemplate: url}
 }
 
 func (x XtraDBOperatorService) InstallXtraDBOperator(ctx context.Context, req *controllerv1beta1.InstallXtraDBOperatorRequest) (*controllerv1beta1.InstallXtraDBOperatorResponse, error) {
@@ -43,7 +44,7 @@ func (x XtraDBOperatorService) InstallXtraDBOperator(ctx context.Context, req *c
 	}
 	defer client.Cleanup() //nolint:errcheck
 
-	err = client.InstallXtraDBOperator(ctx)
+	err = client.InstallOperator(ctx, req.Version, x.manifestsURLTemplate)
 	if err != nil {
 		return nil, err
 	}
