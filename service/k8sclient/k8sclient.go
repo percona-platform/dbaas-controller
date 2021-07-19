@@ -1696,7 +1696,51 @@ func (c *K8sClient) getAPIVersionForPXCOperator(version string) string {
 	return fmt.Sprintf(pxcAPIVersionTemplate, strings.ReplaceAll(version, ".", "-"))
 }
 
-func (c *K8sClient) InstallOperator(ctx context.Context, version string, manifestsURLTemplate string) error {
+// PatchAllPSMDBClusters replaces images versions and CrVersion after update of the operator to match version
+// of the installed operator.
+func (c *K8sClient) PatchAllPSMDBClusters(ctx context.Context, oldVersion, newVersion string) error {
+	var list psmdb.PerconaServerMongoDBList
+	err := c.kubeCtl.Get(ctx, string(perconaServerMongoDBKind), "", &list)
+	if err != nil {
+		return errors.Wrap(err, "couldn't get percona server MongoDB clusters")
+	}
+
+	for _, cluster := range list.Items {
+		cluster.Spec.CRVersion = newVersion
+		cluster.Spec.Image = strings.Replace(cluster.Spec.Image, oldVersion, newVersion, 1)
+		cluster.Spec.Backup.Image = strings.Replace(cluster.Spec.Backup.Image, oldVersion, newVersion, 1)
+		c.kubeCtl.Apply(ctx, cluster)
+	}
+	return nil
+}
+
+// PatchAllPXCClusters replaces the image versions and crVersion after update of the operator to match version
+// of the installed operator.
+func (c *K8sClient) PatchAllPXCClusters(ctx context.Context, oldVersion, newVersion string) error {
+	var list pxc.PerconaXtraDBClusterList
+	err := c.kubeCtl.Get(ctx, string(perconaXtraDBClusterKind), "", &list)
+	if err != nil {
+		return errors.Wrap(err, "couldn't get percona Xtradb clusters")
+	}
+
+	for _, cluster := range list.Items {
+		cluster.Spec.CRVersion = newVersion
+		cluster.Spec.PXC.Image = strings.Replace(cluster.Spec.PXC.Image, oldVersion, newVersion, 1)
+		cluster.Spec.Backup.Image = strings.Replace(cluster.Spec.Backup.Image, oldVersion, newVersion, 1)
+		if cluster.Spec.HAProxy != nil {
+			cluster.Spec.HAProxy.Image = strings.Replace(cluster.Spec.HAProxy.Image, oldVersion, newVersion, 1)
+		} else {
+			cluster.Spec.ProxySQL.Image = strings.Replace(cluster.Spec.ProxySQL.Image, oldVersion, newVersion, 1)
+		}
+		if err := c.kubeCtl.Apply(ctx, cluster); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ApplyOperator applies operator yaml bundle of given version into Kubernetes cluster.
+func (c *K8sClient) ApplyOperator(ctx context.Context, version string, manifestsURLTemplate string) error {
 	manifestsURL := fmt.Sprintf(manifestsURLTemplate, version)
 	req, err := http.NewRequestWithContext(ctx, "GET", manifestsURL, nil)
 	if err != nil {
