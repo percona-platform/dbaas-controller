@@ -29,7 +29,7 @@ import (
 )
 
 type PSMDBOperatorService struct {
-	p                   *message.Printer
+	p                    *message.Printer
 	manifestsURLTemplate string
 }
 

@@ -28,7 +28,7 @@ import (
 )
 
 type XtraDBOperatorService struct {
-	p                   *message.Printer
+	p                    *message.Printer
 	manifestsURLTemplate string
 }
 
