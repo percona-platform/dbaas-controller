@@ -54,6 +54,7 @@ func (x XtraDBOperatorService) InstallXtraDBOperator(ctx context.Context, req *c
 		return nil, err
 	}
 
+	// NOTE: This does not handle corner case when user has deployed database clusters and operator is no longer installed.
 	if operators.XtradbOperatorVersion != "" {
 		err = client.PatchAllPXCClusters(ctx, operators.XtradbOperatorVersion, req.Version)
 		if err != nil {
