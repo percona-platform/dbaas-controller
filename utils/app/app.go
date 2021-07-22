@@ -44,6 +44,13 @@ type SetupOpts struct {
 	Name string
 }
 
+const (
+	// DefaultPXCOperatorURLTemplate is a URL template pointing at bundle.yaml needed to install PXC operator.
+	DefaultPXCOperatorURLTemplate = "https://raw.githubusercontent.com/percona/percona-xtradb-cluster-operator/v%s/deploy/bundle.yaml"
+	// DefaultPSMDBOperatorURLTemplate is a URL template pointing at bundle.yaml needed to install PSMDB operator.
+	DefaultPSMDBOperatorURLTemplate = "https://raw.githubusercontent.com/percona/percona-server-mongodb-operator/v%s/deploy/bundle.yaml"
+)
+
 // Setup initialize app flags for cli.
 func Setup(opts *SetupOpts) (*Flags, error) {
 	if opts == nil {
@@ -66,13 +73,13 @@ func Setup(opts *SetupOpts) (*Flags, error) {
 		"pxc.operator.url.template",
 		"URL template for fetching yaml manifests for Percona Kubernetes Operator for PXC. Place '%s' into URL where version should be placed.",
 	).Default(
-		"https://raw.githubusercontent.com/percona/percona-xtradb-cluster-operator/v%s/deploy/bundle.yaml",
+		DefaultPXCOperatorURLTemplate,
 	).StringVar(&flags.PXCOperatorURLTemplate)
 	kingpin.Flag(
 		"psmdb.operator.url.template",
 		"URL template for fetching yaml manifests for Percona Kubernetes Operator for PSMDB. Place '%s' into URL where version should be placed.",
 	).Default(
-		"https://raw.githubusercontent.com/percona/percona-server-mongodb-operator/v%s/deploy/bundle.yaml",
+		DefaultPSMDBOperatorURLTemplate,
 	).StringVar(&flags.PSMDBOperatorURLTemplate)
 	return &flags, nil
 }

@@ -29,7 +29,7 @@ import (
 )
 
 type PSMDBOperatorService struct {
-	p                   *message.Printer
+	p                    *message.Printer
 	manifestsURLTemplate string
 }
 
@@ -45,9 +45,22 @@ func (x PSMDBOperatorService) InstallPSMDBOperator(ctx context.Context, req *con
 	}
 	defer client.Cleanup() //nolint:errcheck
 
-	err = client.InstallOperator(ctx, req.Version, x.manifestsURLTemplate)
+	operators, err := client.CheckOperators(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	err = client.ApplyOperator(ctx, req.Version, x.manifestsURLTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	// NOTE: This does not handle corner case when user has deployed database clusters and operator is no longer installed.
+	if operators.PsmdbOperatorVersion != "" {
+		err = client.PatchAllPSMDBClusters(ctx, operators.PsmdbOperatorVersion, req.Version)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return new(controllerv1beta1.InstallPSMDBOperatorResponse), nil
