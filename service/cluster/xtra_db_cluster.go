@@ -308,6 +308,22 @@ func (s XtraDBClusterService) GetXtraDBClusterCredentials(ctx context.Context, r
 	return resp, nil
 }
 
+func (s *XtraDBClusterService) GetXtraDBClusterVersion(ctx context.Context, req *controllerv1beta1.GetXtraDBClusterVersionRequest) (*controllerv1beta1.GetXtraDBClusterVersionResponse, error) {
+	client, err := k8sclient.New(ctx, req.KubeAuth.Kubeconfig)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer client.Cleanup() //nolint:errcheck
+
+	version, err := client.GetXtraDBClusterVersion(ctx, req.ClusterName)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &controllerv1beta1.GetXtraDBClusterVersionResponse{
+		Version: version,
+	}, nil
+}
+
 // Check interface.
 var (
 	_ controllerv1beta1.XtraDBClusterAPIServer = (*XtraDBClusterService)(nil)

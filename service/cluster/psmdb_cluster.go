@@ -250,6 +250,10 @@ func (s *PSMDBClusterService) GetPSMDBClusterCredentials(ctx context.Context, re
 	return resp, nil
 }
 
+func (s *PSMDBClusterService) GetPSMDBVersion(ctx context.Context, req *controllerv1beta1.GetPSMDBVersionRequest) (*controllerv1beta1.GetPSMDBVersionResponse, error) {
+	return nil, nil
+}
+
 // Check interface.
 var (
 	_ controllerv1beta1.PSMDBClusterAPIServer = (*PSMDBClusterService)(nil)

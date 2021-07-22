@@ -127,6 +127,7 @@ type perconaServerMongoDBStatus struct {
 	Replsets           map[string]*replsetStatus `json:"replsets,omitempty"`
 	ObservedGeneration int64                     `json:"observedGeneration,omitempty"`
 	Host               string                    `json:"host,omitempty"`
+	MongoVersion       string                    `json:"mongoVersion,omitempty"`
 }
 
 type conditionStatus string

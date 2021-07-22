@@ -1704,3 +1704,37 @@ func (c *K8sClient) InstallPSMDBOperator(ctx context.Context) error {
 	}
 	return c.kubeCtl.Apply(ctx, file)
 }
+
+// TODO: MODIFY THIS TO NOT USE GETCREDENTIALS ERRS. DRY IT MAYBE.
+func (c *K8sClient) GetPSMDBVersion(ctx context.Context, databaseClusterName string) (string, error) {
+	var cluster psmdb.PerconaServerMongoDB
+	err := c.kubeCtl.Get(ctx, string(perconaServerMongoDBKind), databaseClusterName, &cluster)
+	if err != nil {
+		if errors.Is(err, kubectl.ErrNotFound) {
+			return "", errors.Wrap(ErrNotFound, fmt.Sprintf(canNotGetCredentialsErrTemplate, "PSMDB"))
+		}
+		return "", errors.Wrap(err, fmt.Sprintf(canNotGetCredentialsErrTemplate, "PSMDB"))
+	}
+	if cluster.Status.Status != psmdb.AppStateReady { // TODO DO I NEED THIS? IS VERSION SET EVEN DURING UPDATE??
+		return "", errors.Wrap(ErrPSMDBClusterNotReady, fmt.Sprintf(canNotGetCredentialsErrTemplate, "PSMDB"))
+	}
+	return cluster.Status.MongoVersion, nil
+}
+
+// TODO: MODIFY THIS TO NOT USE GETCREDENTIALS ERRS. DRY IT MAYBE.
+func (c *K8sClient) GetXtraDBClusterVersion(ctx context.Context, databaseClusterName string) (string, error) {
+	var cluster pxc.PerconaXtraDBCluster
+	err := c.kubeCtl.Get(ctx, string(perconaXtraDBClusterKind), databaseClusterName, &cluster)
+	if err != nil {
+		if errors.Is(err, kubectl.ErrNotFound) {
+			return "", errors.Wrap(ErrNotFound, fmt.Sprintf(canNotGetCredentialsErrTemplate, "XtraDb"))
+		}
+		return "", errors.Wrap(err, fmt.Sprintf(canNotGetCredentialsErrTemplate, "XtraDb"))
+	}
+	if cluster.Status.Status != pxc.AppStateReady {
+		return "", errors.Wrap(ErrXtraDBClusterNotReady,
+			fmt.Sprintf(canNotGetCredentialsErrTemplate, "XtraDb"),
+		)
+	}
+	return cluster.Status.PXC.Version, nil
+}
